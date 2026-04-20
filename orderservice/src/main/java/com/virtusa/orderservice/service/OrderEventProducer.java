@@ -10,6 +10,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -29,17 +30,18 @@ public class OrderEventProducer {
 
     /**
      * Sends an order event to Kafka with a specific partition key
-     * @param orderEvent The order event to send
-     * @param partitionKey The key used to determine the partition (e.g., customerId, orderId)
+     * 
+     * @param orderEvent   The order event to send
+     * @param partitionKey The key used to determine the partition (e.g.,
+     *                     customerId, orderId)
      * @return The result of the send operation
      */
-    public SendResult<String, OrderEvent> sendOrderEvent(OrderEvent orderEvent, String partitionKey) 
+    public SendResult<String, OrderEvent> sendOrderEvent(OrderEvent orderEvent, String partitionKey)
             throws InterruptedException, ExecutionException, TimeoutException {
-        
+
         // If no partition key is provided, use a default one
-        String key = (partitionKey != null && !partitionKey.isEmpty()) ? 
-                partitionKey : orderEvent.getCustomerId();
-        
+        String key = (partitionKey != null && !partitionKey.isEmpty()) ? partitionKey : orderEvent.getCustomerId();
+
         // Send the message and wait for confirmation
         return kafkaTemplate.send(orderEventsTopic, key, orderEvent)
                 .get(10, TimeUnit.SECONDS);
@@ -47,20 +49,19 @@ public class OrderEventProducer {
 
     /**
      * Sends an order event to Kafka asynchronously with a callback
-     * @param orderEvent The order event to send
+     * 
+     * @param orderEvent   The order event to send
      * @param partitionKey The key used to determine the partition
-     * @param callback The callback to handle the result or failure
+     * @param callback     The callback to handle the result or failure
      */
-    public void sendOrderEventAsync(OrderEvent orderEvent, String partitionKey, 
-                                   ListenableFutureCallback<SendResult<String, OrderEvent>> callback) {
-        
-        String key = (partitionKey != null && !partitionKey.isEmpty()) ? 
-                partitionEvent(orderEvent, partitionKey) : 
-                orderEvent.getCustomerId();
-        
-        ListenableFuture<SendResult<String, OrderEvent>> future = 
-                kafkaTemplate.send(orderEventsTopic, key, orderEvent);
-        
+    public void sendOrderEventAsync(OrderEvent orderEvent, String partitionKey,
+            ListenableFutureCallback<SendResult<String, OrderEvent>> callback) {
+
+        String key = (partitionKey != null && !partitionKey.isEmpty()) ? partitionKey : orderEvent.getCustomerId();
+
+        ListenableFuture<SendResult<String, OrderEvent>> future = (ListenableFuture<SendResult<String, OrderEvent>>) kafkaTemplate
+                .send(orderEventsTopic, key, orderEvent);
+
         future.addCallback(callback);
     }
 
