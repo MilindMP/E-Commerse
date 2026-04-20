@@ -1,0 +1,19 @@
+Server:
+  port: 9095
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: order
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/orders/**
+        - id: user
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/auth/**
+        - id: product
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/products/**
